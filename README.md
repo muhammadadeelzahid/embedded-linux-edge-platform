@@ -1,21 +1,22 @@
-# meta-edge-platform
+# embedded-linux-edge-platform
 
-Embedded Linux platform layer built with Yocto for edge applications, including
-networking, Qt UI, and CAN integration.
+Yocto based embedded Linux platform for edge devices with support for
+networking, Qt applications, and CAN communication.
 
 ## Overview
 
-This repository contains a custom Yocto layer for building an edge-platform
-image on Raspberry Pi hardware. The layer currently includes:
+This repository currently contains the custom Yocto layer used to build the
+platform image and system configuration for Raspberry Pi-based bring-up.
+The layer currently includes:
 
-- a custom image recipe
+- the `edge-platform-image` image recipe
 - Wi-Fi provisioning through `wpa_supplicant`
 - SSH enabled on boot
 - UART console support
 - Raspberry Pi firmware and module selection needed for networking
 
-The layer is intended to grow with the project and can later include recipes
-for Qt applications, CAN services, and other platform components.
+The project is intended to grow with additional Qt applications, CAN services,
+and broader platform integration over time.
 
 ## Layer Name
 

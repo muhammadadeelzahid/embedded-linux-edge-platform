@@ -6,8 +6,13 @@ IMAGE_INSTALL = "packagegroup-core-boot \
                  linux-firmware-rpidistro-bcm43456 \
                  wpa-supplicant \
                  iw \
+                 libubootenv-bin \
                  ${CORE_IMAGE_EXTRA_INSTALL}"
 IMAGE_FEATURES += "ssh-server-openssh allow-root-login"
+
+# A/B dual-rootfs partition layout
+WKS_FILE = "edge-platform-dual.wks.in"
+IMAGE_FSTYPES:append = " ext4"
 
 IMAGE_LINGUAS = " "
 

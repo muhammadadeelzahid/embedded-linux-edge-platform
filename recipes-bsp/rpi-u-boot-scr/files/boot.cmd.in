@@ -1,0 +1,56 @@
+# ────────────────────────────────────────────────
+# A/B Slot Boot Script for Raspberry Pi + U-Boot
+# ────────────────────────────────────────────────
+
+# Load bootargs from device tree (set by RPi firmware)
+fdt addr ${fdt_addr} && fdt get value bootargs /chosen bootargs
+
+# Create uboot.env on first boot if it doesn't exist
+if test ! -e @@BOOT_MEDIA@@ 0:1 uboot.env; then saveenv; fi;
+
+# ── Initialize defaults on very first boot ──
+if test -z "${boot_slot}"; then
+    setenv boot_slot A
+    setenv boot_a_left 3
+    setenv boot_b_left 3
+    saveenv
+fi
+
+# ── A/B Slot selection logic ──
+if test "${boot_slot}" = "A"; then
+    if test ${boot_a_left} -gt 0; then
+        setexpr boot_a_left ${boot_a_left} - 1
+        saveenv
+        setenv rootpart 2
+    else
+        echo "## Slot A exhausted, falling back to B ##"
+        setenv boot_slot B
+        setenv boot_b_left 3
+        setexpr boot_b_left ${boot_b_left} - 1
+        saveenv
+        setenv rootpart 3
+    fi
+else
+    if test ${boot_b_left} -gt 0; then
+        setexpr boot_b_left ${boot_b_left} - 1
+        saveenv
+        setenv rootpart 3
+    else
+        echo "## Slot B exhausted, falling back to A ##"
+        setenv boot_slot A
+        setenv boot_a_left 3
+        setexpr boot_a_left ${boot_a_left} - 1
+        saveenv
+        setenv rootpart 2
+    fi
+fi
+
+echo "## Booting slot ${boot_slot} (partition ${rootpart}) ##"
+echo "## Attempts left: A=${boot_a_left} B=${boot_b_left} ##"
+
+# ── Append root device to kernel command line ──
+setenv bootargs "${bootargs} root=/dev/mmcblk0p${rootpart} rootfstype=ext4 rootwait"
+
+# ── Load kernel and boot ──
+fatload @@BOOT_MEDIA@@ 0:1 ${kernel_addr_r} @@KERNEL_IMAGETYPE@@
+@@KERNEL_BOOTCMD@@ ${kernel_addr_r} - ${fdt_addr}

@@ -4,5 +4,5 @@ part /boot --source bootimg-partition --ondisk mmcblk0 --fstype=vfat --label boo
 # Root filesystem A (default active slot)
 part / --source rootfs --ondisk mmcblk0 --fstype=ext4 --label rootfsA --align 4096 --size 512
 
-# Root filesystem B (initially empty, populated via dd from Linux)
-part --ondisk mmcblk0 --fstype=ext4 --label rootfsB --align 4096 --size 512
+# Root filesystem B (backup slot)
+part --source rootfs --ondisk mmcblk0 --fstype=ext4 --label rootfsB --align 4096 --size 512

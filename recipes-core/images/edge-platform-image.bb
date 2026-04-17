@@ -7,6 +7,7 @@ IMAGE_INSTALL = "packagegroup-core-boot \
                  wpa-supplicant \
                  iw \
                  libubootenv-bin \
+                 boot-mark-good \
                  ${CORE_IMAGE_EXTRA_INSTALL}"
 IMAGE_FEATURES += "ssh-server-openssh allow-root-login"
 

@@ -19,6 +19,16 @@ Key features of the platform include:
 The project is intended to grow with additional Qt applications, CAN services,
 and broader platform integration over time.
 
+## Tools & Technologies Used
+
+- **Yocto Project (Poky):** The core build framework used to generate the tiny, purpose-built embedded Linux distribution from source.
+- **WIC (OpenEmbedded Image Creator):** Tool used to generate the final partitioned OS image (`.wic.bz2`) encompassing the boot sector, root filesystems, and partition table based on our `.wks` design.
+- **U-Boot:** The open-source primary bootloader. Chosen for its robust scripting abilities, allowing us to route booting between A/B software slots and automatically rollback bad flashes.
+- **libubootenv:** Provides the user-space `fw_printenv` and `fw_setenv` utilities, allowing the running Linux OS to read and modify the U-Boot hardware environment safely.
+- **systemd:** The Linux init system and service manager. It allows us to predictably sequence hardware bring-up and provides precise timer components (used for our 30-sec `boot-mark-good` validation trigger).
+- **wpa_supplicant & iw:** User-space tools integrated to establish headless WPA/WPA2 wireless networking out of the box.
+- **OpenSSH:** Standard suite for secure headless administration via ssh.
+
 ## Build Notes
 
 1. Ensure your layer is added to `bblayers.conf`.

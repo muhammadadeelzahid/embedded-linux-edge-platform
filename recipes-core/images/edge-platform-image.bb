@@ -8,8 +8,9 @@ IMAGE_INSTALL = "packagegroup-core-boot \
                  iw \
                  libubootenv-bin \
                  boot-mark-good \
+                 edge-platform-overlays \
                  ${CORE_IMAGE_EXTRA_INSTALL}"
-IMAGE_FEATURES += "ssh-server-openssh allow-root-login read-only-rootfs"
+IMAGE_FEATURES += "ssh-server-openssh allow-root-login read-only-rootfs overlayfs-etc"
 
 # A/B dual-rootfs partition layout
 WKS_FILE = "edge-platform-dual.wks.in"
@@ -94,3 +95,14 @@ disable_ssh_passwords () {
 ROOTFS_POSTPROCESS_COMMAND += " disable_ssh_passwords;"
 
 IMAGE_ROOTFS_EXTRA_SPACE:append = "${@bb.utils.contains("DISTRO_FEATURES", "systemd", " + 4096", "", d)}"
+
+# -------------------------------------------------------------
+# OverlayFS Configuration
+# -------------------------------------------------------------
+inherit overlayfs-etc
+
+# Configure the special /etc overlay (Intercepts early boot before systemd)
+OVERLAYFS_ETC_MOUNT_POINT = "/data"
+OVERLAYFS_ETC_FSTYPE = "ext4"
+OVERLAYFS_ETC_DEVICE = "/dev/mmcblk0p4"
+OVERLAYFS_ETC_USE_ORIG_INIT_NAME = "1"

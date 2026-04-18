@@ -11,10 +11,12 @@ platform image and system configuration for Raspberry Pi-based bring-up.
 Key features of the platform include:
 
 - **Robust Boot & Recovery:** Enabled U-Boot with custom A/B partition boot routing, boot-counting, and automatic fallback logic embedded in `boot.cmd.in`.
-- **A/B Partitioning:** Custom wic layout (`edge-platform-dual.wks.in`) creating 3 partitions: boot (FAT32), Rootfs A (ext4), and Rootfs B (ext4).
+- **Read-Only Core:** The primary OS is fully compiled as a Read-Only RootFS to guarantee zero file-corruption during aggressive power losses.
+- **Native OverlayFS:** Leverages Yocto's `overlayfs` and `overlayfs-etc` classes to transparently mount `/etc`, `/var`, and `/home` over the `/data` partition, providing a completely persistent, read-write feel to the locked-down operating system.
+- **4-Disk Partitioning:** Custom wic layout (`edge-platform-dual.wks.in`) creating 4 partitions: Boot (FAT32), Rootfs A (ext4), Rootfs B (ext4), and a dedicated Data (ext4) partition for overlays and app data.
 - **Modern Service Management:** Built around `systemd` as the primary init manager instead of sysvinit.
 - **Fail-Safe OTA Updates:** Includes the `boot-mark-good` systemd timer+service combo that evaluates OS stability over the first 30 seconds of uptime before finalizing an update slot.
-- **Connectivity:** Wi-Fi provisioning through `wpa_supplicant`, and OpenSSH enabled directly on boot.
+- **Connectivity & Security:** Wi-Fi provisioning through `wpa_supplicant`, and OpenSSH enabled directly on boot with all passwords explicitly disabled in favor of Asymmetric Keys.
 
 The project is intended to grow with additional Qt applications, CAN services,
 and broader platform integration over time.
@@ -27,7 +29,7 @@ and broader platform integration over time.
 - **libubootenv:** Provides the user-space `fw_printenv` and `fw_setenv` utilities, allowing the running Linux OS to read and modify the U-Boot hardware environment safely.
 - **systemd:** The Linux init system and service manager. It allows us to predictably sequence hardware bring-up and provides precise timer components (used for our 30-sec `boot-mark-good` validation trigger).
 - **wpa_supplicant & iw:** User-space tools integrated to establish headless WPA/WPA2 wireless networking out of the box.
-- **OpenSSH:** Standard suite for secure headless administration via ssh.
+- **OpenSSH (Secured):** Standard suite for secure headless administration via ssh. The build explicitly configures `sshd_config` to reject all password authentication, accepting only public SSH keys baked into the ROM.
 - **ext4:** The reliable standard Linux filesystem chosen to format our dual root partitions.
 - **rpidistro-bcm43456:** The proprietary Broadcom firmware blobs explicitly deployed to drive the Raspberry Pi 4's Wi-Fi and Bluetooth radios.
 
@@ -41,6 +43,9 @@ DISTRO ?= "edge-platform"
 MACHINE ?= "raspberrypi4-64"
 RPI_USE_U_BOOT = "1"
 INHERIT += "rm_work"
+
+# Provide your Master SSH Key here (It will be embedded into the Read-Only OS)
+ROOT_SSH_AUTHORIZED_KEYS = "ssh-ed25519 AAAAC3Nz... dev@workstation"
 ```
 
 3. Build the platform image:

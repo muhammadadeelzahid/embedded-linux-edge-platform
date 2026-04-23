@@ -1,42 +1,42 @@
-# embedded-linux-edge-platform
+# meta-edge-platform
 
-Yocto based embedded Linux platform for edge devices with support for
-networking, Qt applications, CAN communication, and robust OTA updates.
+Yocto layer providing an embedded Linux platform for edge devices.
+Includes foundations for secure networking, system initialization, and OTA updates.
 
 ## Overview
 
-This repository contains the custom Yocto layer (`meta-edge-platform`) used to build the
-platform image and system configuration for Raspberry Pi-based bring-up.
+This repository contains the custom Yocto layer (`meta-edge-platform`) to build the
+platform image and configuration for Raspberry Pi.
 
-Key features of the platform include:
+Key features include:
 
-- **Robust Boot & Recovery:** Enabled U-Boot with custom A/B partition boot routing, boot-counting, and automatic fallback logic embedded in `boot.cmd.in`.
-- **Read-Only Core:** The primary OS is fully compiled as a Read-Only RootFS to guarantee zero file-corruption during aggressive power losses.
-- **Native OverlayFS:** Leverages Yocto's `overlayfs` and `overlayfs-etc` classes to transparently mount `/etc`, `/var`, and `/home` over the `/data` partition, providing a completely persistent, read-write feel to the locked-down operating system.
-- **4-Disk Partitioning:** Custom wic layout (`edge-platform-dual.wks.in`) creating 4 partitions: Boot (FAT32), Rootfs A (ext4), Rootfs B (ext4), and a dedicated Data (ext4) partition for overlays and app data.
-- **Modern Service Management:** Built around `systemd` as the primary init manager instead of sysvinit.
-- **Fail-Safe OTA Updates:** Includes the `boot-mark-good` systemd timer+service combo that evaluates OS stability over the first 30 seconds of uptime before finalizing an update slot.
-- **Connectivity & Security:** Wi-Fi provisioning through `wpa_supplicant`, and OpenSSH enabled directly on boot with all passwords explicitly disabled in favor of Asymmetric Keys.
+- **Boot & Recovery:** Uses U-Boot with A/B partition routing and automatic fallback.
+- **Read-Only Core:** The primary OS is read-only to prevent file corruption.
+- **OverlayFS:** Uses Yocto's `overlayfs` to make paths like `/etc`, `/var`, and `/home` writable by storing changes on a separate data partition.
+- **Partitioning:** Creates 4 partitions: Boot (FAT32), Rootfs A (ext4), Rootfs B (ext4), and Data (ext4).
+- **Init System:** Uses `systemd`.
+- **OTA Updates:** Uses a `boot-mark-good` service to wait 30 seconds before confirming an update is successful.
+- **Connectivity & Security:** Includes `wpa_supplicant` for Wi-Fi and allows OpenSSH access using keys only (passwords disabled).
 
-The project is intended to grow with additional Qt applications, CAN services,
-and broader platform integration over time.
+This layer is meant to serve as a solid foundation, allowing project-specific
+applications (like UI or custom daemons) to be maintained in separate app layers.
 
 ## Tools & Technologies Used
 
-- **Yocto Project (Poky):** The core build framework used to generate the tiny, purpose-built embedded Linux distribution from source.
-- **WIC (OpenEmbedded Image Creator):** Tool used to generate the final partitioned OS image (`.wic.bz2`) encompassing the boot sector, root filesystems, and partition table based on our `.wks` design.
-- **U-Boot:** The open-source primary bootloader. Chosen for its robust scripting abilities, allowing us to route booting between A/B software slots and automatically rollback bad flashes.
-- **libubootenv:** Provides the user-space `fw_printenv` and `fw_setenv` utilities, allowing the running Linux OS to read and modify the U-Boot hardware environment safely.
-- **systemd:** The Linux init system and service manager. It allows us to predictably sequence hardware bring-up and provides precise timer components (used for our 30-sec `boot-mark-good` validation trigger).
-- **wpa_supplicant & iw:** User-space tools integrated to establish headless WPA/WPA2 wireless networking out of the box.
-- **OpenSSH (Secured):** Standard suite for secure headless administration via ssh. The build explicitly configures `sshd_config` to reject all password authentication, accepting only public SSH keys baked into the ROM.
-- **ext4:** The reliable standard Linux filesystem chosen to format our dual root partitions.
-- **rpidistro-bcm43456:** The proprietary Broadcom firmware blobs explicitly deployed to drive the Raspberry Pi 4's Wi-Fi and Bluetooth radios.
+- **Yocto Project (Poky):** The core build framework.
+- **WIC:** Generates the final partitioned OS image (`.wic.bz2`).
+- **U-Boot:** The bootloader, which handles switching between A/B software slots.
+- **libubootenv:** Allows the Linux OS to read and modify U-Boot variables safely.
+- **systemd:** The Linux init system and service manager.
+- **wpa_supplicant & iw:** Tools for wireless networking.
+- **OpenSSH:** Standard suite for secure ssh access.
+- **ext4:** The Linux filesystem chosen to format the root partitions.
+- **rpidistro-bcm43456:** Firmware for the Raspberry Pi Wi-Fi and Bluetooth.
 
 ## Build Notes
 
 1. Ensure your layer is added to `bblayers.conf`.
-2. Configure your build to use our custom distribution and enable the hardware configurations by adding this to your `build-rpi/conf/local.conf`:
+2. Add the following to your `build-rpi/conf/local.conf`:
 
 ```bitbake
 DISTRO ?= "edge-platform"
@@ -44,7 +44,7 @@ MACHINE ?= "raspberrypi4-64"
 RPI_USE_U_BOOT = "1"
 INHERIT += "rm_work"
 
-# Provide your Master SSH Key here (It will be embedded into the Read-Only OS)
+# Provide your Master SSH Key here
 ROOT_SSH_AUTHORIZED_KEYS = "ssh-ed25519 AAAAC3Nz... dev@workstation"
 ```
 
